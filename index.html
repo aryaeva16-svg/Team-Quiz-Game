@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Team Quiz Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- React + Babel -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    /* Icons as inline SVGs */
+    const Trophy = () => (
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+        <path d="M4 22h16"/>
+        <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+      </svg>
+    );
+
+    const Plus = () => <span className="text-xl font-bold">+</span>;
+    const Minus = () => <span className="text-xl font-bold">−</span>;
+
+    function TeamQuizGame() {
+      const [team1Score, setTeam1Score] = useState(0);
+      const [team2Score, setTeam2Score] = useState(0);
+      const [team1Name, setTeam1Name] = useState("");
+      const [team2Name, setTeam2Name] = useState("");
+      const [tempTeam1Name, setTempTeam1Name] = useState("");
+      const [tempTeam2Name, setTempTeam2Name] = useState("");
+      const [gameStarted, setGameStarted] = useState(false);
+      const [currentQuestion, setCurrentQuestion] = useState("");
+      const [currentAnswer, setCurrentAnswer] = useState("");
+      const [askingTeam, setAskingTeam] = useState(1);
+      const [questionAsked, setQuestionAsked] = useState(false);
+      const [history, setHistory] = useState([]);
+
+      const startGame = () => {
+        if (tempTeam1Name.trim() && tempTeam2Name.trim()) {
+          setTeam1Name(tempTeam1Name.trim());
+          setTeam2Name(tempTeam2Name.trim());
+          setGameStarted(true);
+        }
+      };
+
+      const handleAskQuestion = () => {
+        if (currentQuestion.trim()) setQuestionAsked(true);
+      };
+
+      const handleCorrectAnswer = () => {
+        const answeringTeam = askingTeam === 1 ? 2 : 1;
+        answeringTeam === 1
+          ? setTeam1Score(team1Score + 10)
+          : setTeam2Score(team2Score + 10);
+
+        setHistory([
+          ...history,
+          {
+            question: currentQuestion,
+            answer: currentAnswer,
+            correct: true,
+            points: 10
+          }
+        ]);
+
+        setCurrentQuestion("");
+        setCurrentAnswer("");
+        setQuestionAsked(false);
+        setAskingTeam(answeringTeam);
+      };
+
+      const handleWrongAnswer = () => {
+        const answeringTeam = askingTeam === 1 ? 2 : 1;
+        answeringTeam === 1
+          ? setTeam1Score(Math.max(0, team1Score - 2))
+          : setTeam2Score(Math.max(0, team2Score - 2));
+
+        setHistory([
+          ...history,
+          {
+            question: currentQuestion,
+            answer: currentAnswer,
+            correct: false,
+            points: -2
+          }
+        ]);
+
+        setCurrentQuestion("");
+        setCurrentAnswer("");
+        setQuestionAsked(false);
+        setAskingTeam(answeringTeam);
+      };
+
+      if (!gameStarted) {
+        return (
+          <div className="min-h-screen flex items-center justify-center bg-indigo-100">
+            <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+              <div className="flex justify-center mb-4 text-yellow-500"><Trophy /></div>
+              <h1 className="text-3xl font-bold text-center mb-4">Team Quiz Game</h1>
+
+              <input
+                className="w-full border p-3 rounded mb-3"
+                placeholder="Team 1 Name"
+                value={tempTeam1Name}
+                onChange={(e) => setTempTeam1Name(e.target.value)}
+              />
+
+              <input
+                className="w-full border p-3 rounded mb-4"
+                placeholder="Team 2 Name"
+                value={tempTeam2Name}
+                onChange={(e) => setTempTeam2Name(e.target.value)}
+              />
+
+              <button
+                onClick={startGame}
+                className="w-full bg-indigo-600 text-white py-3 rounded font-bold"
+              >
+                Start Game
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="min-h-screen bg-indigo-100 p-6">
+          <div className="max-w-4xl mx-auto bg-white p-6 rounded shadow">
+            <h1 className="text-2xl font-bold text-center mb-6 flex justify-center gap-2">
+              <Trophy /> Team Quiz Game
+            </h1>
+
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="bg-blue-500 text-white p-4 rounded text-center">
+                <h2>{team1Name}</h2>
+                <p className="text-4xl">{team1Score}</p>
+              </div>
+              <div className="bg-green-500 text-white p-4 rounded text-center">
+                <h2>{team2Name}</h2>
+                <p className="text-4xl">{team2Score}</p>
+              </div>
+            </div>
+
+            {!questionAsked ? (
+              <>
+                <textarea
+                  className="w-full border p-3 rounded mb-3"
+                  placeholder="Type question"
+                  value={currentQuestion}
+                  onChange={(e) => setCurrentQuestion(e.target.value)}
+                />
+                <button onClick={handleAskQuestion} className="w-full bg-indigo-500 text-white py-2 rounded">
+                  Ask Question
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="mb-2 font-semibold">Question: {currentQuestion}</p>
+                <textarea
+                  className="w-full border p-3 rounded mb-3"
+                  placeholder="Type answer"
+                  value={currentAnswer}
+                  onChange={(e) => setCurrentAnswer(e.target.value)}
+                />
+                <div className="flex gap-3 justify-center">
+                  <button onClick={handleCorrectAnswer} className="bg-green-500 text-white px-6 py-2 rounded">
+                    <Plus /> Correct
+                  </button>
+                  <button onClick={handleWrongAnswer} className="bg-red-500 text-white px-6 py-2 rounded">
+                    <Minus /> Wrong
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<TeamQuizGame />);
+  </script>
+</body>
+</html>
